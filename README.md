@@ -1,7 +1,6 @@
-
 # Megatron-LM on Snellius using virtual environment
 
-This code base is for users to quickly set up a virtual environment for pretraining LLMs with Megatron-LM.
+This code base is for Snellius users to quickly set up a virtual environment for pretraining LLMs with Megatron-LM.
 
 ## Create virtual environment 
 **Estimated time:** 10 minutes.
@@ -41,7 +40,7 @@ chmod +x launch.sh
 3. Submit the job.
 ```
 sbatch train-gpt-venv.job
-
+```
 ### If you want to run the training for debugging purposes, allocate one GPU
 1. Load required modules.
 ```
