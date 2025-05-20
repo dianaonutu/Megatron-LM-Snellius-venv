@@ -30,7 +30,9 @@ module load cuDNN/9.5.0.50-CUDA-12.6.0
 ```
 python -m venv megatron-venv
 ```
-4. Allocate compute node, activate virtual environment and install packages. **Estimated time:** 7 minutes
+4. Allocate compute node, activate virtual environment and install packages.
+
+**Estimated time:** 7 minutes
 ```
 salloc -n 16 -t 30:00
 source megatron-venv/bin/activate
