@@ -77,6 +77,7 @@ chmod +x train-gpt-venv.job
 
 ## Tokenize & Preprocess data
 **Estimated time:** 45 minutes.
+
 Load required modules, if not done yet.
 ```
 module load 2024
@@ -91,13 +92,18 @@ export PROJECT_SPACE=/projects/0/prjs1502
 ```
 
 ### Download FineWeb dataset
+
+The 10BT shard from the HuggingFace's [FineWeb](https://huggingface.co/datasets/HuggingFaceFW/fineweb) dataset.
+
 **Estimated time:** 8 minutes.
 ```
 python load_fineweb.py
 ```
 
 ### Tokenization/Preprocessing
+
 **Estimated time:** 34 minutes.
+
 Set environment variables for input/output paths and worker count.
 ```
 export FINEWEB_INPUT=$PROJECT_SPACE/datasets/FineWeb/raw/fineweb-10BT.jsonl
@@ -108,6 +114,8 @@ Run the tokenizer.
 ```
 python Megatron-LM/tools/preprocess_data.py --input $FINEWEB_INPUT --output-prefix $FINEWEB_OUTPUT --tokenizer-type HuggingFaceTokenizer --tokenizer-model gpt2 --append-eod --log-interval 10000 --workers $WORKERS
 ```
+The output is an index file (idx) and the binary (bin) of the tokenizer model.
+
 Exit allocated node: `exit`.
 
 ## Acknowledgments
