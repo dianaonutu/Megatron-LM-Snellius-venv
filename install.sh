@@ -7,7 +7,7 @@ pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https
 
 # Step 2: Install Python packages
 echo "Installing base Python packages..."
-pip install nltk wandb
+pip install nltk wandb pandas pyarrow multiprocess xxhash
 pip install transformers -v --no-deps
 pip install datasets tokenizers sentencepiece protobuf tqdm nvtx regex safetensors pyyaml wheel pybind11 packaging ninja huggingface_hub --no-deps
 
