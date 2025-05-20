@@ -121,4 +121,4 @@ The output is an index file (idx) and the binary (bin) of the tokenizer model.
 Exit allocated node: `exit`.
 
 ## Acknowledgments
-Thanks to @spyysalo original LUMI Megatron-LM [guide](https://github.com/spyysalo/lumi-fineweb-replication) and @tvosch [guide](https://github.com/SURF-ML/Megatron-LM-Snellius) for creating this guide. 
+Thanks to [@spyysalo](https://github.com/spyysalo) original LUMI Megatron-LM [guide](https://github.com/spyysalo/lumi-fineweb-replication) and [@tvosch](https://github.com/tvosch) [guide](https://github.com/SURF-ML/Megatron-LM-Snellius) for creating this guide. 
