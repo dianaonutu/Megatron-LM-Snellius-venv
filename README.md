@@ -41,6 +41,7 @@ chmod +x launch.sh
 ```
 sbatch train-gpt-venv.job
 ```
+
 ### If you want to run the training for debugging purposes, allocate one GPU
 1. Load required modules.
 ```
@@ -78,11 +79,13 @@ salloc -p gpu_h100 --gpus-per-node 1 -t 1:00:00
 source megatron-venv/bin/activate
 export PROJECT_SPACE=/projects/0/prjs1502
 ```
+
 ### Download FineWeb dataset
 **Estimated time:** 8 minutes.
 ```
 python load_fineweb.py
 ```
+
 ### Tokenization/Preprocessing
 **Estimated time:** 34 minutes.
 Set environment variables for input/output paths and worker count.
@@ -96,3 +99,6 @@ Run the tokenizer.
 python Megatron-LM/tools/preprocess_data.py --input $FINEWEB_INPUT --output-prefix $FINEWEB_OUTPUT --tokenizer-type HuggingFaceTokenizer --tokenizer-model gpt2 --append-eod --log-interval 10000 --workers $WORKERS
 ```
 Exit allocated node: `exit`.
+
+## Acknowledgments
+Thanks to @spyysalo original LUMI Megatron-LM [guide](https://github.com/spyysalo/lumi-fineweb-replication) and @tvosch [guide](https://github.com/SURF-ML/Megatron-LM-Snellius) for creating this guide. 
