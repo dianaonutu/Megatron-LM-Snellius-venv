@@ -24,4 +24,6 @@ source megatron-venv/bin/activate
 ./install.sh
 ```
 4. Once finished, stop node allocation.
-`exit`
+```
+exit
+```
