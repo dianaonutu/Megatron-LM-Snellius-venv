@@ -40,43 +40,6 @@ source megatron-venv/bin/activate
 ```
 4. Once finished, exit node allocation: `exit`.
 
-## Pretraining a GPT model
-1. Clone the Megatron-LM repository.
-```
-git clone https://github.com/NVIDIA/Megatron-LM.git
-```
-2. Set permissions. You only need to run this command once.
-```
-chmod +x launch.sh
-```
-3. Submit the job.
-```
-sbatch train-gpt-venv.job
-```
-
-### If you want to run the training for debugging purposes, allocate one GPU
-1. Load required modules.
-```
-module purge
-module load 2024 Python/3.12.3-GCCcore-13.3.0
-module load NCCL/2.22.3-GCCcore-13.3.0-CUDA-12.6.0 
-module load cuDNN/9.5.0.50-CUDA-12.6.0
-```
-2. Allocate 1 GPU:
-```
-salloc -p gpu_h100 --gpus-per-node 1 -t 1:00:00
-export SLURM_CPUS_PER_TASK=1
-export SLURM_NTASKS=1
-```
-3. If not done yet, set permissions:
-```
-chmod +x train-gpt-venv.job
-```
-4. Run the training within `salloc`:
-```
-./train-gpt-venv.job
-```
-
 ## Tokenize & Preprocess data
 **Estimated time:** 45 minutes.
 
@@ -119,6 +82,43 @@ python Megatron-LM/tools/preprocess_data.py --input $FINEWEB_INPUT --output-pref
 The output is an index file (idx) and the binary (bin) of the tokenizer model.
 
 Exit allocated node: `exit`.
+
+## Pretraining a GPT model
+1. Clone the Megatron-LM repository.
+```
+git clone https://github.com/NVIDIA/Megatron-LM.git
+```
+2. Set permissions. You only need to run this command once.
+```
+chmod +x launch.sh
+```
+3. Submit the job.
+```
+sbatch train-gpt-venv.job
+```
+
+### If you want to run the training for debugging purposes, allocate one GPU
+1. Load required modules.
+```
+module purge
+module load 2024 Python/3.12.3-GCCcore-13.3.0
+module load NCCL/2.22.3-GCCcore-13.3.0-CUDA-12.6.0 
+module load cuDNN/9.5.0.50-CUDA-12.6.0
+```
+2. Allocate 1 GPU:
+```
+salloc -p gpu_h100 --gpus-per-node 1 -t 1:00:00
+export SLURM_CPUS_PER_TASK=1
+export SLURM_NTASKS=1
+```
+3. If not done yet, set permissions:
+```
+chmod +x train-gpt-venv.job
+```
+4. Run the training within `salloc`:
+```
+./train-gpt-venv.job
+```
 
 ## Acknowledgments
 Thanks to [@spyysalo](https://github.com/spyysalo) original LUMI Megatron-LM [guide](https://github.com/spyysalo/lumi-fineweb-replication) and [@tvosch](https://github.com/tvosch) [guide](https://github.com/SURF-ML/Megatron-LM-Snellius) for creating this guide. 
