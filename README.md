@@ -5,12 +5,12 @@ This codebase is for Snellius users to quickly set up a virtual environment for 
 ## Table of Contents
 
 1. [Create Virtual Environment](#create-virtual-environment)  
-2. [Pretraining a GPT Model](#pretraining-a-gpt-model)  
-   2.1 [Debug Training with One GPU](#if-you-want-to-run-the-training-for-debugging-purposes-allocate-one-gpu)  
-3. [Tokenize & Preprocess Data](#tokenize--preprocess-data)  
+2. [Tokenize & Preprocess Data](#tokenize--preprocess-data)  
    3.1 [Download FineWeb Dataset](#download-fineweb-dataset)  
    3.2 [Tokenization/Preprocessing](#tokenizationpreprocessing)  
-4. [Acknowledgments](#acknowledgments)
+3. [Pretraining a GPT Model](#pretraining-a-gpt-model)  
+   3.1 [Debug Training with One GPU](#if-you-want-to-run-the-training-for-debugging-purposes-allocate-one-gpu)  
+5. [Acknowledgments](#acknowledgments)
 
 ## Create virtual environment 
 **Estimated time:** 10 minutes.
@@ -42,6 +42,8 @@ source megatron-venv/bin/activate
 
 ## Tokenize & Preprocess data
 **Estimated time:** 45 minutes.
+
+If you don't already have a dataset, download and tokenize [FineWeb](https://huggingface.co/datasets/HuggingFaceFW/fineweb).
 
 Load required modules, if not done yet.
 ```
