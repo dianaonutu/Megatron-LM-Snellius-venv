@@ -84,7 +84,7 @@ The output is an index file (idx) and the binary (bin) of the tokenizer model.
 Exit allocated node: `exit`.
 
 ## Pretraining a GPT model
-1. Clone the Megatron-LM repository.
+1. Clone the Megatron-LM repository. This codebases uses commit [`8a9e8644`](https://github.com/NVIDIA/Megatron-LM/commit/8a9e8644) .
 ```
 git clone https://github.com/NVIDIA/Megatron-LM.git
 ```
