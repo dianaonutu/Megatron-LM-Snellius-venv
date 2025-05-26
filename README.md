@@ -110,6 +110,7 @@ module load cuDNN/9.5.0.50-CUDA-12.6.0
 2. Allocate 1 GPU:
 ```
 salloc -p gpu_h100 --gpus-per-node 1 -t 1:00:00
+source megatron-venv/bin/activate
 export SLURM_CPUS_PER_TASK=1
 export SLURM_NTASKS=1
 ```
