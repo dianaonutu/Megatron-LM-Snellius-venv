@@ -45,7 +45,7 @@ if [ -z $SLURM_JOB_ID ]; then
     exit
 fi
 
-export PROJECT_SPACE=/projects/0/prjsXXXX
+export PROJECT_SPACE=/projects/0/prjsXXXX     ### Refer to your own project space
 
 if [ -z "$PROJECT_SPACE" ]; then
   echo "Error: PROJECT_SPACE is not set. Please set the project space path in this script. Example: export PROJECT_SPACE=/projects/0/prjsXXXX"
