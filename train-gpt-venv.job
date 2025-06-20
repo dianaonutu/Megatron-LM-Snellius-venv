@@ -60,7 +60,7 @@ module load NCCL/2.22.3-GCCcore-13.3.0-CUDA-12.6.0
 module load cuDNN/9.5.0.50-CUDA-12.6.0
 
 # Activate virtual environment
-source /projects/0/prjs1502/megatron/megatron-venv/bin/activate
+# source environment_path/bin/activate ### Add the path to your virtual environment
 
 ################################### VENV ##############################
 
