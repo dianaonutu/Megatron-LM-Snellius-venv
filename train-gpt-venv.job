@@ -10,12 +10,12 @@
 #SBATCH --output logs/%j.out
 #SBATCH --error logs/%j.err
 
-# This is a slurm script for training generative models on LUMI using
-# Megatron-LM pretrain_gpt.py. This script defines defaults for
-# training a FineWeb-like model (approx. 1.7B parameters) and is
-# intended to be reasonably easily modified for other model sizes
-# by editing the variables defined in the "MODEL AND PRETRAINING
-# CONFIGURATION" section below.
+# This is a slurm script for training generative models on Snellius 
+# using a virtual environment using Megatron-LM pretrain_gpt.py. 
+# This script defines defaults for training a FineWeb-like model 
+# (approx. 1.7B parameters) and is intended to be reasonably easily
+# modified for other model sizes by editing the variables defined in
+# the "MODEL AND PRETRAINING CONFIGURATION" section below.
 #
 # Note that while the script defines default arguments for sbatch
 # in the #SBATCH comments above, you can override any of these on the
@@ -45,16 +45,14 @@ if [ -z $SLURM_JOB_ID ]; then
     exit
 fi
 
-export PROJECT_SPACE=/projects/0/prjs1502
+export PROJECT_SPACE=/projects/0/prjsXXXX
 
 if [ -z "$PROJECT_SPACE" ]; then
   echo "Error: PROJECT_SPACE is not set. Please set the project space path in this script. Example: export PROJECT_SPACE=/projects/0/prjsXXXX"
   exit 1
 fi
 
-# CONTAINER=$PROJECT_SPACE/containers/megatron-torch-2.7-nvcr.25-04.sif             ############### no container
-
-################################### VENV stuff ##############################
+################################### VENV ##############################
 # Load required modules
 module purge
 module load 2024 Python/3.12.3-GCCcore-13.3.0
@@ -64,9 +62,7 @@ module load cuDNN/9.5.0.50-CUDA-12.6.0
 # Activate virtual environment
 source /projects/0/prjs1502/megatron/megatron-venv/bin/activate
 
-################################### VENV stuff ##############################
-
-
+################################### VENV ##############################
 
 # Bash "strict mode"
 # (see http://redsymbol.net/articles/unofficial-bash-strict-mode/)
@@ -93,21 +89,6 @@ if [[ -v SLURM_RESTART_COUNT ]]; then
         sacctmgr show event where node="$failed_node" format="NodeName,TimeStart,TimeEnd,State,Reason%100"
     fi
 fi
-
-# Symlink logs/latest.out and logs/latest.err for convenience and to
-# support the above check.
-#ln -sf "${logfile_basename}.out" "logs/latest.out"
-#ln -sf "${logfile_basename}.err" "logs/latest.err"
-
-# # Modules are needed with the container we are using.
-# module purge
-# module load 2024 NCCL/2.22.3-GCCcore-13.3.0-CUDA-12.6.0
-
-# Directories to map into container
-# BIND_DIRS="/scratch-shared/$USER,$PROJECT_SPACE"    ############### no container
-
-# Avoid conflicts with $HOME/.local
-# export PYTHONUSERBASE=""               ############### no container
 
 # Compilers in the container
 export CC=gcc                          
@@ -140,7 +121,6 @@ export OMP_NUM_THREADS=${SLURM_CPUS_PER_NODE:-2}
 # training instability on LUMI with pipeline parallelism.
 # (see https://github.com/spyysalo/lumi-fineweb-replication/issues/1)
 #export NCCL_NCHANNELS_PER_PEER=32
-
 
 # DEBUGGING, INCREASE VERBOSITY IN LOGS
 # export MIOPEN_ENABLE_LOGGING=1
@@ -407,17 +387,6 @@ echo '===================================='
 echo "START $SLURM_JOBID: $(date)"
 echo "SLURM_NNODES: $SLURM_NNODES"
 echo "SLURM_CPUS_PER_TASK: $SLURM_CPUS_PER_TASK"
-
-
-# srun \                              ############### no container
-#     --label \
-#     apptainer exec \
-#     --nv \
-#     -B "$BASE_DIR" \
-#     -B "$BIND_DIRS" \
-#     "$CONTAINER" \
-#     "$LAUNCH_SCRIPT" \
-#     $COMMAND
 
 srun --label "$LAUNCH_SCRIPT" $COMMAND      ############### Since we run it in a virtualenv, we need a plain srun command
 echo "END $SLURM_JOBID: $(date)"
