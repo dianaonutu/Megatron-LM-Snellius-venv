@@ -13,7 +13,7 @@ pip install datasets tokenizers sentencepiece protobuf tqdm nvtx regex safetenso
 
 # Step 3: Install transformer_engine
 echo "Installing transformer_engine..."
-pip install --no-build-isolation transformer_engine[pytorch]
+pip install --no-build-isolation "transformer_engine[pytorch]==2.3.0"
 
 # Step 4: Clone and install NVIDIA Apex
 echo "Installing NVIDIA Apex..."
