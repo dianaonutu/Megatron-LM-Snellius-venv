@@ -1,132 +1,146 @@
-# Megatron-LM on Snellius using virtual environment
+# Pre-training LLMs with Megatron-LM on Snellius using virtual environment
 
-This codebase is for Snellius users to quickly set up a virtual environment for pretraining LLMs with Megatron-LM.
+This guide is for Snellius users to quickly set up a virtual environment for pretraining LLMs using Nvidia's [Megatron-LM](https://github.com/NVIDIA/Megatron-LM).
+
+## Environment setup
+The tasks below require a specific set of libraries and versions installed on Snellius. The module combination listed here is compatible
+with **PyTorch 2.6** and **CUDA 12.6**, and is optimal for tasks such as installing FlashAttention fast. The virtual environment 
+used for pre-training with Megatron-LM requires the following modules loaded:
+```
+module purge # Clear all previously loaded modules
+module load 2024
+module load Python/3.12.3-GCCcore-13.3.0
+module load CUDA/12.6.0
+module load NCCL/2.22.3-GCCcore-13.3.0-CUDA-12.6.0    # Includes CUDA 12.6.0 dependencies
+module load cuDNN/9.5.0.50-CUDA-12.6.0                # Includes CUDA 12.6.0 dependencies
+```
+### Module Descriptions
+- **Python 3.12.3**: Python interpreter and standard libraries.
+- **CUDA 12.6.0**: Required for GPU acceleration.
+- **NCCL 2.22.3**: Enables efficient multi-GPU communication.
+- **cuDNN 9.5.0.50**: Provides optimized GPU kernels for deep learning.
 
 ## Table of Contents
 
 1. [Create Virtual Environment](#create-virtual-environment)  
 2. [Tokenize & Preprocess Data](#tokenize--preprocess-data)  
    2.1 [Download FineWeb Dataset](#download-fineweb-dataset)  
-   2.2 [Tokenization/Preprocessing](#tokenizationpreprocessing)  
+   2.2 [Tokenization & Preprocessing](#tokenization--preprocessing)  
 3. [Pretraining a GPT Model](#pretraining-a-gpt-model)  
    3.1 [Debug Training with One GPU](#if-you-want-to-run-the-training-for-debugging-purposes-allocate-one-gpu)  
-5. [Acknowledgments](#acknowledgments)
+4. [Acknowledgments](#acknowledgments)
 
 ## Create virtual environment 
-**Estimated time:** 10 minutes.
-1. Clone this repository and `cd` into it.
+**Estimated time:** 10 minutes
+Clone this repository and navigate into its directory:
 ```
-https://github.com/dianaonutu/Megatron-LM-Snellius-venv.git
+git clone https://github.com/dianaonutu/Megatron-LM-Snellius-venv.git
+cd Megatron-LM-Snellius-venv
 ```
-2. Load required modules. Note, this combination of modules together with PyTorch 2.6 and CUDA 12.6 is the best (e.g., for fast flash attention installation).
-```
-module purge
-module load 2024
-module load Python/3.12.3-GCCcore-13.3.0
-module load NCCL/2.22.3-GCCcore-13.3.0-CUDA-12.6.0
-module load cuDNN/9.5.0.50-CUDA-12.6.0
-```
-3. Create a virtual environment. 
+Ensure the required modules are loaded [Environment Setup](#environment-setup). Then, create the virtual environment:
 ```
 python -m venv megatron-venv
 ```
-4. Allocate compute node, activate virtual environment and install packages.
-
+Allocate a compute node, activate the virtual environment, and install packages.
+> Login nodes are intended only for lightweight tasks (e.g., job submission and monitoring). Installing libraries can be
+resource-intensive and may be terminated automatically if it consumes too many resources on login nodes. Always allocate
+a compute node for installation tasks.
 **Estimated time:** 7 minutes
 ```
 salloc -n 16 -t 30:00
 source megatron-venv/bin/activate
 ./install.sh
 ```
-4. Once finished, exit node allocation: `exit`.
+Once finished, exit node allocation:
+```exit```
 
 ## Tokenize & Preprocess data
-**Estimated time:** 45 minutes.
+**Estimated time:** 45 minutes
 
-If you don't already have a dataset, download and tokenize [FineWeb](https://huggingface.co/datasets/HuggingFaceFW/fineweb).
-
-Load required modules, if not done yet.
-```
-module load 2024
-module load Python/3.12.3-GCCcore-13.3.0
-module load cuDNN/9.5.0.50-CUDA-12.6.0
-```
-Allocate a compute node, activate virtual environment and set project path.
+Ensure required modules are loaded. Allocate a compute node, activate your virtual environment, and set the path to your own project directory:
 ```
 salloc -p gpu_h100 --gpus-per-node 1 -t 1:00:00
 source megatron-venv/bin/activate
-export PROJECT_SPACE=/projects/0/prjs1502
+export PROJECT_SPACE=/projects/0/prjsXXXX   # Replace with your project ID
 ```
 
 ### Download FineWeb dataset
-
-The 10BT shard from the HuggingFace's [FineWeb](https://huggingface.co/datasets/HuggingFaceFW/fineweb) dataset.
-
-**Estimated time:** 8 minutes.
+If you don't already have a dataset, download and tokenize the 10B shard from HuggingFace's
+[FineWeb](https://huggingface.co/datasets/HuggingFaceFW/fineweb).
+**Estimated time:** 8 minutes
 ```
 python load_fineweb.py
 ```
 
-### Tokenization/Preprocessing
-
-**Estimated time:** 34 minutes.
-
-Set environment variables for input/output paths and worker count.
+### Tokenization & Preprocessing
+Set environment variables for input and output paths and worker count.
 ```
 export FINEWEB_INPUT=$PROJECT_SPACE/datasets/FineWeb/raw/fineweb-10BT.jsonl
 export FINEWEB_OUTPUT=$PROJECT_SPACE/datasets/FineWeb/fineweb-10BT
 export WORKERS=${SLURM_CPUS_PER_TASK:-16}
 ```
-Run the tokenizer.
+Run the tokenizer. 
+**Estimated time:** 34 minutes
 ```
-python Megatron-LM/tools/preprocess_data.py --input $FINEWEB_INPUT --output-prefix $FINEWEB_OUTPUT --tokenizer-type HuggingFaceTokenizer --tokenizer-model gpt2 --append-eod --log-interval 10000 --workers $WORKERS
-```
-The output is an index file (idx) and the binary (bin) of the tokenizer model.
+python Megatron-LM/tools/preprocess_data.py \
+    --input $FINEWEB_INPUT \
+    --output-prefix $FINEWEB_OUTPUT \
+    --tokenizer-type HuggingFaceTokenizer \
+    --tokenizer-model gpt2 \
+    --append-eod \
+    --log-interval 10000 \
+    --workers $WORKERS```
+The output is an index file (`.idx`) and the binary (`.bin`) of the tokenizer model.
 
-Exit allocated node: `exit`.
+Exit the node when done: 
+```exit```
 
 ## Pretraining a GPT model
-1. Clone the Megatron-LM repository. This codebase uses commit [`8a9e8644`](https://github.com/NVIDIA/Megatron-LM/commit/8a9e8644) .
+### Preparing
+Clone the Megatron-LM repository, if you haven't done it already. This codebase is based on commit [`8a9e8644`](https://github.com/NVIDIA/Megatron-LM/commit/8a9e8644).
 ```
 git clone https://github.com/NVIDIA/Megatron-LM.git
+cd Megatron-LM
+git checkout 8a9e8644
+cd ..
 ```
-2. Set permissions. You only need to run this command once.
+Make scripts executable. You only need to run this command once.
 ```
 chmod +x launch.sh
+chmod +x train-gpt-venv.job
 ```
-3. Refer to your own project space in the `train-gpt-venv.job` file (line 48):
+Set your project and virtual environment paths in `train-gpt-venv.job`:
 ```
-export PROJECT_SPACE=/projects/0/prjsXXXX   ### refer to your own project space
+export PROJECT_SPACE=/projects/0/prjsXXXX   # Replace with your project ID
+export VENV_PATH=/path/to/your/venv         # Replace with actual venv path
+```
+**Optional**: To enable Weights & Biases logging, add the following to the `OUTPUT_ARGS` section in `train-gpt-venv.job`:
+```
+--wandb_exp_name <your_experiment_name>
+--wandb_project <your_project_name>
+--wandb_save_dir <your_wandb_dir>
 ```
 
-4. Submit the job.
+### Option 1: Start Pretraining
+Submit the job.
 ```
 sbatch train-gpt-venv.job
 ```
 
-### If you want to run the training for debugging purposes, allocate one GPU
-1. Load required modules.
-```
-module purge
-module load 2024 Python/3.12.3-GCCcore-13.3.0
-module load NCCL/2.22.3-GCCcore-13.3.0-CUDA-12.6.0 
-module load cuDNN/9.5.0.50-CUDA-12.6.0
-```
-2. Allocate 1 GPU:
+### Option 2: Run Tests and Debug on a Single GPU
+This option is meant for quickly testing your setup and code or debugging issues on a single GPU.
+
+Ensure required modules are loaded. Allocate a single GPU:
 ```
 salloc -p gpu_h100 --gpus-per-node 1 -t 1:00:00
 source megatron-venv/bin/activate
 export SLURM_CPUS_PER_TASK=1
 export SLURM_NTASKS=1
 ```
-3. If not done yet, set permissions:
-```
-chmod +x train-gpt-venv.job
-```
-4. Run the training within `salloc`:
+Now, you can start your testing session within the `salloc` environment by running:
 ```
 ./train-gpt-venv.job
 ```
 
 ## Acknowledgments
-Thanks to [@spyysalo](https://github.com/spyysalo) original LUMI Megatron-LM [guide](https://github.com/spyysalo/lumi-fineweb-replication) and [@tvosch](https://github.com/tvosch) [guide](https://github.com/SURF-ML/Megatron-LM-Snellius) for creating this guide. 
+Thanks to [@spyysalo](https://github.com/spyysalo) original LUMI Megatron-LM [guide](https://github.com/spyysalo/lumi-fineweb-replication) and [@tvosch's](https://github.com/tvosch) [guide](https://github.com/SURF-ML/Megatron-LM-Snellius) for creating this one. 
