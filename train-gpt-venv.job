@@ -45,7 +45,7 @@ if [ -z $SLURM_JOB_ID ]; then
     exit
 fi
 
-export PROJECT_SPACE=/projects/0/prjsXXXX     ### Refer to your own project space
+export PROJECT_SPACE=/projects/0/prjs1502     ### Refer to your own project space
 
 if [ -z "$PROJECT_SPACE" ]; then
   echo "Error: PROJECT_SPACE is not set. Please set the project space path in this script. Example: export PROJECT_SPACE=/projects/0/prjsXXXX"
@@ -59,9 +59,17 @@ module load 2024 Python/3.12.3-GCCcore-13.3.0
 module load NCCL/2.22.3-GCCcore-13.3.0-CUDA-12.6.0 
 module load cuDNN/9.5.0.50-CUDA-12.6.0
 
-# Activate virtual environment
-# source environment_path/bin/activate ### Add the path to your virtual environment
 
+export VENV_PATH=      ### Refer to your desired virtual environment path
+
+# Check that VENV_PATH is set
+if [ -z "$VENV_PATH" ]; then
+    echo "Error: VENV_PATH is not set. Please export the path to your virtual environment:"
+    exit 1
+fi
+
+# Activate virtual environment
+source "$VENV_PATH/bin/activate"
 ################################### VENV ##############################
 
 # Bash "strict mode"
@@ -334,6 +342,9 @@ OUTPUT_ARGS=(
     --eval-iters $EVAL_ITERS
     --tensorboard-dir "$TENSORBOARD_DIR"
     --tensorboard-queue-size 5
+    # --wandb_exp_name 
+    # --wandb_project  
+    # --wandb_save_dir  
     --log-throughput
     --log-progress
     --log-interval $LOG_INTERVAL
