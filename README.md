@@ -1,4 +1,4 @@
-# Pre-training LLMs with Megatron-LM on Snellius using virtual environment
+# Pre-training LLMs with Megatron-LM on Snellius using Virtual Environment
 
 This guide is for Snellius users to quickly set up a virtual environment for pretraining LLMs using Nvidia's [Megatron-LM](https://github.com/NVIDIA/Megatron-LM).
 
@@ -30,21 +30,23 @@ module load cuDNN/9.5.0.50-CUDA-12.6.0                # Includes CUDA 12.6.0 dep
    3.1 [Debug Training with One GPU](#if-you-want-to-run-the-training-for-debugging-purposes-allocate-one-gpu)  
 4. [Acknowledgments](#acknowledgments)
 
-## Create virtual environment 
+## Create Virtual Environment 
 **Estimated time:** 10 minutes
+
 Clone this repository and navigate into its directory:
 ```
 git clone https://github.com/dianaonutu/Megatron-LM-Snellius-venv.git
 cd Megatron-LM-Snellius-venv
 ```
-Ensure the required modules are loaded [Environment Setup](#environment-setup). Then, create the virtual environment:
+Ensure the required modules are loaded (see [Environment Setup](#environment-setup)). Then, create the virtual environment:
 ```
 python -m venv megatron-venv
 ```
 Allocate a compute node, activate the virtual environment, and install packages.
-> Login nodes are intended only for lightweight tasks (e.g., job submission and monitoring). Installing libraries can be
-resource-intensive and may be terminated automatically if it consumes too many resources on login nodes. Always allocate
-a compute node for installation tasks.
+> **Note**: Login nodes are intended only for lightweight tasks (e.g., job submission and monitoring). Installing libraries can be
+resource-intensive and may be terminated automatically if it consumes too many resources on the login nodes. Always allocate
+a compute node for installing libraries.
+> 
 **Estimated time:** 7 minutes
 ```
 salloc -n 16 -t 30:00
@@ -52,7 +54,9 @@ source megatron-venv/bin/activate
 ./install.sh
 ```
 Once finished, exit node allocation:
-```exit```
+```
+exit
+```
 
 ## Tokenize & Preprocess data
 **Estimated time:** 45 minutes
