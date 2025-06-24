@@ -26,9 +26,14 @@ module load cuDNN/9.5.0.50-CUDA-12.6.0                # Includes CUDA 12.6.0 dep
 2. [Tokenize & Preprocess Data](#tokenize--preprocess-data)  
    2.1 [Download FineWeb Dataset](#download-fineweb-dataset)  
    2.2 [Tokenization & Preprocessing](#tokenization--preprocessing)  
-3. [Pretraining a GPT Model](#pretraining-a-gpt-model)  
-   3.1 [Debug Training with One GPU](#if-you-want-to-run-the-training-for-debugging-purposes-allocate-one-gpu)  
-4. [Acknowledgments](#acknowledgments)
+3. [Pretraining a GPT Model](#pretraining-a-gpt-model)
+   3.1 [Configuration]
+   3.2 Options after Configuration:
+      - [Option 1: Start Pretraining](#option-1-pretrain)
+      - [Option 2: Run Tests and Debug on a Single GPU](#option-2-run-tests-and-debug-on-a-single-gpu)
+   
+   
+5. [Acknowledgments](#acknowledgments)
 
 ## Create Virtual Environment 
 **Estimated time:** 10 minutes
@@ -107,7 +112,7 @@ exit
 ```
 
 ## Pretraining a GPT model
-### Preparing
+### Configuration
 Clone the Megatron-LM repository, if you haven't done it already. This codebase is based on commit [`8a9e8644`](https://github.com/NVIDIA/Megatron-LM/commit/8a9e8644).
 ```
 git clone https://github.com/NVIDIA/Megatron-LM.git
