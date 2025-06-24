@@ -27,7 +27,7 @@ module load cuDNN/9.5.0.50-CUDA-12.6.0                # Includes CUDA 12.6.0 dep
    2.1 [Download FineWeb Dataset](#download-fineweb-dataset)  
    2.2 [Tokenization & Preprocessing](#tokenization--preprocessing)
 3. [Pretraining a GPT Model](#pretraining-a-gpt-model)
-   3.1 [Configuration](#configuration)
+      - [Configuration](#configuration)
       - [Option 1: Start Pretraining](#option-1-start-pretraining)
       - [Option 2: Run Tests and Debug on a Single GPU](#option-2-run-tests-and-debug-on-a-single-gpu)
 4. [Acknowledgments](#acknowledgments)
