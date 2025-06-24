@@ -29,8 +29,8 @@ module load cuDNN/9.5.0.50-CUDA-12.6.0                # Includes CUDA 12.6.0 dep
 3. [Pretraining a GPT Model](#pretraining-a-gpt-model)
    3.1 [Configuration](#configuration)
    3.2 Options after Configuration:
-   &nbsp;&nbsp;&nbsp;&nbsp;• [Option 1: Start Pretraining](#option-1-start-pretraining)
-   &nbsp;&nbsp;&nbsp;&nbsp;• [Option 2: Run Tests and Debug on a Single GPU](#option-2-run-tests-and-debug-on-a-single-gpu)
+   - [Option 1: Start Pretraining](#option-1-start-pretraining)
+   - [Option 2: Run Tests and Debug on a Single GPU](#option-2-run-tests-and-debug-on-a-single-gpu)
 5. [Acknowledgments](#acknowledgments)
 
 ## Create Virtual Environment 
