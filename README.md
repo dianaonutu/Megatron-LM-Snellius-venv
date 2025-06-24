@@ -58,7 +58,7 @@ Once finished, exit node allocation:
 exit
 ```
 
-## Tokenize & Preprocess data
+## Tokenize & Preprocess Data
 **Estimated time:** 45 minutes
 
 Ensure required modules are loaded. Allocate a compute node, activate your virtual environment, and set the path to your own project directory:
@@ -68,9 +68,10 @@ source megatron-venv/bin/activate
 export PROJECT_SPACE=/projects/0/prjsXXXX   # Replace with your project ID
 ```
 
-### Download FineWeb dataset
+### Download FineWeb Dataset
 If you don't already have a dataset, download and tokenize the 10B shard from HuggingFace's
 [FineWeb](https://huggingface.co/datasets/HuggingFaceFW/fineweb).
+
 **Estimated time:** 8 minutes
 ```
 python load_fineweb.py
@@ -84,6 +85,7 @@ export FINEWEB_OUTPUT=$PROJECT_SPACE/datasets/FineWeb/fineweb-10BT
 export WORKERS=${SLURM_CPUS_PER_TASK:-16}
 ```
 Run the tokenizer. 
+
 **Estimated time:** 34 minutes
 ```
 python Megatron-LM/tools/preprocess_data.py \
@@ -93,7 +95,9 @@ python Megatron-LM/tools/preprocess_data.py \
     --tokenizer-model gpt2 \
     --append-eod \
     --log-interval 10000 \
-    --workers $WORKERS```
+    --workers $WORKERS
+```
+
 The output is an index file (`.idx`) and the binary (`.bin`) of the tokenizer model.
 
 Exit the node when done: 
