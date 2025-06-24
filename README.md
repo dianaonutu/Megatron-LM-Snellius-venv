@@ -61,7 +61,7 @@ exit
 ## Tokenize & Preprocess Data
 **Estimated time:** 45 minutes
 
-Ensure required modules are loaded. Allocate a compute node, activate your virtual environment, and set the path to your own project directory:
+Ensure required modules are loaded (see [Environment Setup](#environment-setup)). Allocate a compute node, activate your virtual environment, and set the path to your own project directory:
 ```
 salloc -p gpu_h100 --gpus-per-node 1 -t 1:00:00
 source megatron-venv/bin/activate
@@ -69,7 +69,7 @@ export PROJECT_SPACE=/projects/0/prjsXXXX   # Replace with your project ID
 ```
 
 ### Download FineWeb Dataset
-If you don't already have a dataset, download and tokenize the 10B shard from HuggingFace's
+Download the 10B shard from HuggingFace's
 [FineWeb](https://huggingface.co/datasets/HuggingFaceFW/fineweb).
 
 **Estimated time:** 8 minutes
@@ -101,7 +101,10 @@ python Megatron-LM/tools/preprocess_data.py \
 The output is an index file (`.idx`) and the binary (`.bin`) of the tokenizer model.
 
 Exit the node when done: 
-```exit```
+
+```
+exit
+```
 
 ## Pretraining a GPT model
 ### Preparing
@@ -138,7 +141,7 @@ sbatch train-gpt-venv.job
 ### Option 2: Run Tests and Debug on a Single GPU
 This option is meant for quickly testing your setup and code or debugging issues on a single GPU.
 
-Ensure required modules are loaded. Allocate a single GPU:
+Ensure required modules are loaded (see [Environment Setup](#environment-setup)). Allocate a single GPU and activate virtual environment:
 ```
 salloc -p gpu_h100 --gpus-per-node 1 -t 1:00:00
 source megatron-venv/bin/activate
@@ -151,4 +154,4 @@ Now, you can start your testing session within the `salloc` environment by runni
 ```
 
 ## Acknowledgments
-Thanks to [@spyysalo](https://github.com/spyysalo) original LUMI Megatron-LM [guide](https://github.com/spyysalo/lumi-fineweb-replication) and [@tvosch's](https://github.com/tvosch) [guide](https://github.com/SURF-ML/Megatron-LM-Snellius) for creating this one. 
+Thanks to [@spyysalo](https://github.com/spyysalo)'s original [LUMI Megatron-LM guide](https://github.com/spyysalo/lumi-fineweb-replication) and [@tvosch](https://github.com/tvosch)'s [Snellius guide](https://github.com/SURF-ML/Megatron-LM-Snellius) that helped in creating this one. 
