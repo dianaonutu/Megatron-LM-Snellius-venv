@@ -133,6 +133,11 @@ export VENV_PATH=/path/to/your/venv         # Replace with actual venv path
 --wandb_project <your_project_name>
 --wandb_save_dir <your_wandb_dir>
 ```
+To enable Weights & Biases logging, you must also set your API key as an environment variable. This authenticates your session with Weights & Biases.
+Replace <your_wandb_key> with your actual Weights & Biases API key, which you can find at https://wandb.ai/authorize after logging in.
+```
+export WANDB_API_KEY=<your_wandb_key>
+```
 
 ### Option 1: Start Pretraining
 Submit the job.
@@ -143,10 +148,9 @@ sbatch train-gpt-venv.job
 ### Option 2: Run Tests and Debug on a Single GPU
 This option is meant for quickly testing your setup and code or debugging issues on a single GPU.
 
-Ensure required modules are loaded (see [Environment Setup](#environment-setup)). Allocate a single GPU and activate virtual environment:
+Allocate a single GPU:
 ```
 salloc -p gpu_h100 --gpus-per-node 1 -t 1:00:00
-source megatron-venv/bin/activate
 export SLURM_CPUS_PER_TASK=1
 export SLURM_NTASKS=1
 ```
