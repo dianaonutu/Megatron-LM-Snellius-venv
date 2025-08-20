@@ -4,7 +4,7 @@ This guide is for Snellius users to quickly set up a virtual environment for pre
 
 ## Environment setup
 The tasks below require a specific set of libraries and versions installed on Snellius. The module combination listed here is compatible
-with **PyTorch 2.6** and **CUDA 12.6**, and is optimal for tasks such as installing FlashAttention fast. The virtual environment 
+with **PyTorch 2.6** (PyTorch 2.5.1 also works) and **CUDA 12.6**, and is optimal for tasks such as installing FlashAttention fast. The virtual environment 
 used for pre-training with Megatron-LM requires the following modules loaded:
 ```
 module purge # Clear all previously loaded modules
