@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name=train-gpt
+#SBATCH --job-name=scalability_test
 #SBATCH --cpus-per-task=16
-#SBATCH --ntasks-per-node=4
-#SBATCH --nodes=4
-#SBATCH --partition=gpu_h100
-#SBATCH --time=1:00:00
+#SBATCH --ntasks-per-node=4   #4
+#SBATCH --nodes=2       #4
+#SBATCH --partition=gpu_a100
+#SBATCH --time=30:00
 #SBATCH --exclusive
 #SBATCH --gpus-per-node=4
 #SBATCH --output logs/%j.out
@@ -45,7 +45,7 @@ if [ -z $SLURM_JOB_ID ]; then
     exit
 fi
 
-export PROJECT_SPACE=
+export PROJECT_SPACE=/projects/0/prjs1502
 
 if [ -z "$PROJECT_SPACE" ]; then
   echo "Error: PROJECT_SPACE is not set. Please set the project space path in this script. Example: export PROJECT_SPACE=/projects/0/prjsXXXX"
@@ -56,7 +56,7 @@ CONTAINER=$PROJECT_SPACE/containers/megatron-torch-2.7-nvcr.25-04.sif
 
 # Bash "strict mode"
 # (see http://redsymbol.net/articles/unofficial-bash-strict-mode/)
-#set -euo pipefail
+# set -euo pipefail
 
 # When slurm reschedules a job that ended on node failure, it will run
 # with the same job ID, clobbering the original logs. Rename the logs
@@ -153,11 +153,14 @@ export NVTE_DEBUG_LEVEL=0
 ######################################################################
 
 # DATA
-#DATA_PATH="$PROJECT_SPACE/datasets/FineWeb/fineweb-10BT_text_document" # gpt-2
-DATA_PATH="$PROJECT_SPACE/datasets/FineWeb/fineweb-10BT-llama3_text_document" # llama 3
-#TOKENIZER_MODEL="gpt2"
-TOKENIZER_MODEL="/projects/0/prjs1502/tokenizers/models--meta-llama--Meta-Llama-3.1-8B-Instruct/snapshots/8c22764a7e3675c50d4c7c9a4edb474456022b16" # llama3
+DATA_PATH="$PROJECT_SPACE/datasets/FineWeb/fineweb-10BT_text_document" # gpt-2
+# DATA_PATH="$PROJECT_SPACE/datasets/FineWeb/fineweb-10BT-llama3_text_document" # llama 3
+TOKENIZER_MODEL="gpt2"
+# TOKENIZER_MODEL="/projects/0/prjs1502/tokenizers/models--meta-llama--Meta-Llama-3.1-8B-Instruct/snapshots/8c22764a7e3675c50d4c7c9a4edb474456022b16" # llama3
 DATA_CACHE_PATH="/scratch-shared/$USER/megatron_cache"
+
+export TRITON_CACHE_DIR=/scratch-shared/donutu1/triton_cache
+export TRITON_LIBCUDA_PATH=/scratch-shared/$USER/local/cuda/compat/lib.real/libcuda.so.1
 
 # MODEL
 # 1,713,735,680 (1.7B) parameters
@@ -191,7 +194,7 @@ WEIGHT_DECAY=1e-1
 # TRAINING
 FSDP=0
 GLOBAL_BATCH_SIZE=64
-MICRO_BATCH_SIZE=4
+MICRO_BATCH_SIZE=2
 RECOMPUTATION=0
 TRAIN_TOKENS=350_000_000_000    # TRAIN_SAMPLES computed from this
 
@@ -337,6 +340,28 @@ OPTIMIZER_ARGS=(
     --weight-decay $WEIGHT_DECAY
 )
 
+export WANDB_API_KEY="6909dd59d408a1fdf5535bbebe92d454b40d8c16"
+export WANDB_ENTITY=oellm-team
+
+TOTAL_GPUS=$((SLURM_NNODES * SLURM_GPUS_PER_NODE))
+GPU_TYPE=$(grep "^#SBATCH --partition=" train-gpt-container.job | grep -oP '(?<=gpu_)\w+')
+
+if [ -n "$WANDB_API_KEY" ]; then
+    WANDB_DIR="$OUTPUT_DIR/wandb/$SLURM_JOB_NAME-$SLURM_JOBID"
+    WANDB_ARGS=(
+        --wandb-project "debugging"
+        --wandb-exp-name "debugging-${TOTAL_GPUS}gpu-${SLURM_NNODES}node-snls-${GPU_TYPE}-${MICRO_BATCH_SIZE}mbs-${SEQ_LENGTH}cl-job${SLURM_JOB_ID}"
+        --wandb-save-dir $WANDB_DIR
+    )
+    export WANDB_DATA_DIR=/scratch-shared/$USER/wandb
+    export WANDB_CACHE_DIR=/scratch-shared/$USER/wandb-cache
+mkdir -p $WANDB_CACHE_DIR
+
+    mkdir -p $WANDB_DATA_DIR
+else
+    WANDB_ARGS=()
+fi
+
 OUTPUT_ARGS=(
     --eval-interval $EVAL_INTERVAL
     --eval-iters $EVAL_ITERS
@@ -345,6 +370,7 @@ OUTPUT_ARGS=(
     --log-throughput
     --log-progress
     --log-interval $LOG_INTERVAL
+    --log-timers-to-tensorboard
 )
 
 # Interleaved pipeline scheduling is only possible with pipeline
@@ -365,7 +391,6 @@ fi
 CHECKPOINT_ARGS=(
     --ckpt-format torch    # "legacy" checkpoints; torch_dist is crashing
 #     --async-save    # requires --ckpt-format torch_dist
-    --load "$CHECKPOINT_PATH"
     --save "$CHECKPOINT_PATH"
     --save-interval $SAVE_INTERVAL
 )
@@ -379,6 +404,8 @@ COMMAND=" \
     "${CHECKPOINT_ARGS[@]}" \
     "${DATA_ARGS[@]}" \
     "${PROFILE_ARGS[@]}" \
+    "${WANDB_ARGS[@]}" \
+
 "
 
 ######################################################################
