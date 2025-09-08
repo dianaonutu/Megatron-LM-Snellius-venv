@@ -340,7 +340,7 @@ OPTIMIZER_ARGS=(
     --weight-decay $WEIGHT_DECAY
 )
 
-export WANDB_API_KEY="6909dd59d408a1fdf5535bbebe92d454b40d8c16"
+export WANDB_API_KEY=""
 export WANDB_ENTITY=oellm-team
 
 TOTAL_GPUS=$((SLURM_NNODES * SLURM_GPUS_PER_NODE))
