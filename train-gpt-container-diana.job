@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=scalability_test
 #SBATCH --cpus-per-task=16
-#SBATCH --ntasks-per-node=4   #4
-#SBATCH --nodes=2       #4
+#SBATCH --ntasks-per-node=1   #4
+#SBATCH --nodes=1       #4
 #SBATCH --partition=gpu_a100
 #SBATCH --time=30:00
 #SBATCH --exclusive
-#SBATCH --gpus-per-node=4
+#SBATCH --gpus-per-node=1
 #SBATCH --output logs/%j.out
 #SBATCH --error logs/%j.err
 
@@ -39,6 +39,7 @@
 # also gives us an opportunity to make sure logs/ exists. (If the
 # directory where --output and/or --error are directed to doesn't
 # exist, the run will fail silently.)
+
 if [ -z $SLURM_JOB_ID ]; then
     mkdir -p logs
     sbatch "$0" "$@"
@@ -98,6 +99,11 @@ export PYTHONUSERBASE=""
 # Compilers in the container
 export CC=gcc
 export CXX=g++
+
+
+TOTAL_GPUS=$((SLURM_NNODES * SLURM_GPUS_PER_NODE))
+GPU_TYPE=$(grep "^#SBATCH --partition=" train-gpt-container.job | grep -oP '(?<=gpu_)\w+')
+JOB_NAME="1BMegatronLM-${TOTAL_GPUS}gpu-${SLURM_NNODES}node-snls-${GPU_TYPE}-${MICRO_BATCH_SIZE}mbs-${SEQ_LENGTH}cl-job${SLURM_JOB_ID}"
 
 # PATHS
 BASE_DIR="$PWD" #$SLURM_SUBMIT_DIR"
@@ -171,7 +177,7 @@ NUM_ATTENTION_HEADS=32
 NUM_QUERY_GROUPS=32    # No GQA when NUM_QUERY_GROUPS=NUM_ATTENTION_HEADS
 TIE_WORD_EMBEDDINGS=1
 INIT_METHOD_STD=0.02
-SEQ_LENGTH=4096
+SEQ_LENGTH=512
 ROTARY_BASE=10000    # Default, recommend larger for higher seq len
 
 # PARALLELISM
@@ -193,8 +199,8 @@ WEIGHT_DECAY=1e-1
 
 # TRAINING
 FSDP=0
-GLOBAL_BATCH_SIZE=64
-MICRO_BATCH_SIZE=2
+MICRO_BATCH_SIZE=2         # previously 4 (which works on H100, but not on A100) because of OOM
+GLOBAL_BATCH_SIZE=$((${MICRO_BATCH_SIZE} * ${TOTAL_GPUS}))   # previously 64.
 RECOMPUTATION=0
 TRAIN_TOKENS=350_000_000_000    # TRAIN_SAMPLES computed from this
 
@@ -227,12 +233,12 @@ confirm_unset "LR_DECAY_SAMPLES"
 
 # Calculate TRAIN_SAMPLES from TRAIN_TOKENS
 TRAIN_TOKENS=${TRAIN_TOKENS//_}    # drop "_" for bash math
-TRAIN_SAMPLES=$((TRAIN_TOKENS/SEQ_LENGTH))
+# TRAIN_SAMPLES=$((TRAIN_TOKENS/SEQ_LENGTH))
 
 # Set LR_WARMUP_SAMPLES and LR_DECAY_SAMPLES and based LR_WARMUP_ITERS
 # and TRAIN_SAMPLES
 LR_WARMUP_SAMPLES=$((LR_WARMUP_ITERS*GLOBAL_BATCH_SIZE))
-LR_DECAY_SAMPLES=$TRAIN_SAMPLES
+# LR_DECAY_SAMPLES=$TRAIN_SAMPLES
 
 ######################################################################
 #
@@ -301,7 +307,7 @@ else
 fi
 
 MODEL_ARGS+=(
-    --use-flash-attn
+    # --use-flash-attn
     --attention-softmax-in-fp32
     --max-position-embeddings $SEQ_LENGTH
     --seq-length $SEQ_LENGTH
@@ -311,12 +317,12 @@ MODEL_ARGS+=(
     --init-method-std $INIT_METHOD_STD
     --attention-dropout 0.0
     --hidden-dropout 0.0
-    --normalization RMSNorm
+    --normalization LayerNorm # default: RMSNorm
     --micro-batch-size $MICRO_BATCH_SIZE
-    --global-batch-size $GLOBAL_BATCH_SIZE
-    --train-samples $TRAIN_SAMPLES
+    # --global-batch-size $GLOBAL_BATCH_SIZE
+    # --train-samples $TRAIN_SAMPLES
     --bf16
-    --swiglu
+    # --swiglu # default was swiglu
     --no-async-tensor-model-parallel-allreduce
     --no-masked-softmax-fusion
     --no-gradient-accumulation-fusion
@@ -334,23 +340,22 @@ OPTIMIZER_ARGS=(
     --lr $LR
     --min-lr $MIN_LR
     --lr-decay-style cosine
-    --lr-decay-samples $LR_DECAY_SAMPLES
-    --lr-warmup-samples $LR_WARMUP_SAMPLES
+    # --lr-decay-samples $LR_DECAY_SAMPLES
+    # --lr-warmup-samples $LR_WARMUP_SAMPLES
+    --lr-warmup-fraction 0.01
     --clip-grad $CLIP_GRAD
     --weight-decay $WEIGHT_DECAY
+    --train-iters 1000
 )
 
-export WANDB_API_KEY=""
-export WANDB_ENTITY=oellm-team
 
-TOTAL_GPUS=$((SLURM_NNODES * SLURM_GPUS_PER_NODE))
-GPU_TYPE=$(grep "^#SBATCH --partition=" train-gpt-container.job | grep -oP '(?<=gpu_)\w+')
+export WANDB_ENTITY=oellm-team
 
 if [ -n "$WANDB_API_KEY" ]; then
     WANDB_DIR="$OUTPUT_DIR/wandb/$SLURM_JOB_NAME-$SLURM_JOBID"
     WANDB_ARGS=(
-        --wandb-project "debugging"
-        --wandb-exp-name "debugging-${TOTAL_GPUS}gpu-${SLURM_NNODES}node-snls-${GPU_TYPE}-${MICRO_BATCH_SIZE}mbs-${SEQ_LENGTH}cl-job${SLURM_JOB_ID}"
+        --wandb-project "dense"
+        --wandb-exp-name $JOB_NAME
         --wandb-save-dir $WANDB_DIR
     )
     export WANDB_DATA_DIR=/scratch-shared/$USER/wandb
@@ -362,15 +367,29 @@ else
     WANDB_ARGS=()
 fi
 
+if [[ "$SYSTEMNAME" = "juwelsbooster" || \
+      "$SYSTEMNAME" = "juwels"        || \
+      "$SYSTEMNAME" = "jurecadc"      || \
+      "$SYSTEMNAME" = "jusuf" ]]; then
+
+    export WANDB_MODE=offline
+else
+    # Other clusters (e.g. Snellius)
+    export WANDB_MODE=online
+fi
+
+
 OUTPUT_ARGS=(
     --eval-interval $EVAL_INTERVAL
     --eval-iters $EVAL_ITERS
     --tensorboard-dir "$TENSORBOARD_DIR"
     --tensorboard-queue-size 5
     --log-throughput
+    --log-timers-to-tensorboard
     --log-progress
     --log-interval $LOG_INTERVAL
-    --log-timers-to-tensorboard
+    --tensorboard-log-interval 1
+
 )
 
 # Interleaved pipeline scheduling is only possible with pipeline
