@@ -101,9 +101,38 @@ export CC=gcc
 export CXX=g++
 
 
+# Known issue on Snellius. NCCL sometimes hangs during initialization.
+# Workaround: set NCCL_SOCKET_IFNAME to the ethernet interface for initialization.
+if [ "$SLURM_JOB_PARTITION" == "gpu_h100" ]; then
+    echo "Using H100 partition on Snellius, setting NCCL_SOCKET_IFNAME to eno2np0"
+    export NCCL_SOCKET_IFNAME="eno2np0"
+    SERVER="SNLSh"
+
+elif [ "$SLURM_JOB_PARTITION" == "gpu_a100" ]; then
+    echo "Using A100 partition on Snellius, setting NCCL_SOCKET_IFNAME to eno1np0"
+    export NCCL_SOCKET_IFNAME="eno1np0"
+    SERVER="SNLSa"
+
+elif [[ -n "$SYSTEMNAME" && "$SYSTEMNAME" = juwelsbooster ]]; then
+    echo "Using Juwels booster partition, setting GLOO_SOCKET_IFNAME to ib0"
+    # Prevent Gloo not being able to communicate.
+    export GLOO_SOCKET_IFNAME=ib0
+    # Code works without this as well
+    # export NCCL_SOCKET_IFNAME=ib0
+    SERVER="JSC"
+
+    # Note from https://apps.fz-juelich.de/jsc/hps/juwels/gpu-computing.html#gpu-visibility-affinity
+    export CUDA_VISIBLE_DEVICES=0,1,2,3
+
+    # Found as example here: https://apps.fz-juelich.de/jsc/hps/juwels/batchsystem.html#writing-a-batch-script
+    # export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}    # gives error: libgomp: Invalid value for environment variable OMP_NUM_THREADS: 
+fi 
+
+
+N_PARAMS="1.31"
+
 TOTAL_GPUS=$((SLURM_NNODES * SLURM_GPUS_PER_NODE))
 GPU_TYPE=$(grep "^#SBATCH --partition=" train-gpt-container.job | grep -oP '(?<=gpu_)\w+')
-JOB_NAME="1BMegatronLM-${TOTAL_GPUS}gpu-${SLURM_NNODES}node-snls-${GPU_TYPE}-${MICRO_BATCH_SIZE}mbs-${SEQ_LENGTH}cl-job${SLURM_JOB_ID}"
 
 # PATHS
 BASE_DIR="$PWD" #$SLURM_SUBMIT_DIR"
@@ -348,6 +377,20 @@ OPTIMIZER_ARGS=(
     --weight-decay $WEIGHT_DECAY
     --train-iters $TRAIN_STEPS
 )
+
+
+DATASET=fineweb
+MODEL=megatron-ar
+SL_NAME=""
+GAS_NAME=""
+if [ -n "$SEQ_LENGTH" ]; then
+    SL_NAME="-${SEQ_LENGTH}sl"
+fi
+if [ -n "$GAS" ]; then
+    GAS_NAME="-${GAS}gas"
+fi
+
+JOB_NAME="${SERVER}-${SLURM_JOB_ID}-${N_PARAMS}B-${TOTAL_GPUS}gpu-${MICRO_BATCH_SIZE}mbs-${DATASET}-${MODEL}${SL_NAME}${GAS_NAME}"
 
 
 export WANDB_ENTITY=oellm-team
