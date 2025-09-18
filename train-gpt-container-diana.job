@@ -3,7 +3,7 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --ntasks-per-node=1   #4
 #SBATCH --nodes=1       #4
-#SBATCH --partition=gpu_a100
+#SBATCH --partition=gpu_h100
 #SBATCH --time=30:00
 #SBATCH --exclusive
 #SBATCH --gpus-per-node=1
@@ -175,7 +175,7 @@ HIDDEN_SIZE=2048
 FFN_HIDDEN_SIZE=$((4*HIDDEN_SIZE))
 NUM_ATTENTION_HEADS=32
 NUM_QUERY_GROUPS=32    # No GQA when NUM_QUERY_GROUPS=NUM_ATTENTION_HEADS
-TIE_WORD_EMBEDDINGS=1
+TIE_WORD_EMBEDDINGS=0    # 1: tie, 0: untie
 INIT_METHOD_STD=0.02
 SEQ_LENGTH=512
 ROTARY_BASE=10000    # Default, recommend larger for higher seq len
@@ -203,6 +203,7 @@ MICRO_BATCH_SIZE=2         # previously 4 (which works on H100, but not on A100)
 GLOBAL_BATCH_SIZE=$((${MICRO_BATCH_SIZE} * ${TOTAL_GPUS}))   # previously 64.
 RECOMPUTATION=0
 TRAIN_TOKENS=350_000_000_000    # TRAIN_SAMPLES computed from this
+TRAIN_STEPS=1000    
 
 # SAVING AND EVALUATION
 LOG_INTERVAL=1
@@ -323,11 +324,11 @@ MODEL_ARGS+=(
     # --train-samples $TRAIN_SAMPLES
     --bf16
     # --swiglu # default was swiglu
-    --no-async-tensor-model-parallel-allreduce
-    --no-masked-softmax-fusion
-    --no-gradient-accumulation-fusion
-    --no-bias-dropout-fusion
-    --no-rope-fusion    # buggy on AMD, do not enable without validating
+    # --no-async-tensor-model-parallel-allreduce
+    # --no-masked-softmax-fusion
+    # --no-gradient-accumulation-fusion
+    # --no-bias-dropout-fusion
+    # --no-rope-fusion    # buggy on AMD, do not enable without validating
     --distributed-timeout-minutes 30
     --overlap-grad-reduce
 )
@@ -345,7 +346,7 @@ OPTIMIZER_ARGS=(
     --lr-warmup-fraction 0.01
     --clip-grad $CLIP_GRAD
     --weight-decay $WEIGHT_DECAY
-    --train-iters 1000
+    --train-iters $TRAIN_STEPS
 )
 
 
